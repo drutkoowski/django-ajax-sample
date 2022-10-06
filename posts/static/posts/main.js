@@ -9,6 +9,11 @@ const body = document.getElementById('id_body')
 const csrf = document.getElementsByName('csrfmiddlewaretoken')
 const alertBox = document.getElementById('alert-box')
 
+const dropzone = document.getElementById('my-dropzone')
+const addBtn = document.getElementById('add-btn')
+const closeBtns = [...document.getElementsByClassName('add-modal-close')]
+const url = window.location.href
+console.log(url)
 
 // ajax calls csrf token
 const getCookie = (name) => {
@@ -29,6 +34,11 @@ const getCookie = (name) => {
 const csrftoken = getCookie('csrftoken');
 //
 
+const deleted = localStorage.getItem('title')
+if (deleted) {
+    handleAlerts('danger', `${deleted} was deleted successfully!`)
+    localStorage.clear()
+}
 
 const likeUnlikePosts = () => {
     const likeUnlikeForms = [...document.getElementsByClassName('like-unlike-forms')]
@@ -77,7 +87,7 @@ const getData = () => {
                   <div class="card-footer">
                     <div class="row">
                         <div class="col-1">
-                            <a href="#" class="btn btn-primary">Details</a>
+                            <a href="${url}${el.id}" class="btn btn-primary">Details</a>
                         </div>
                         
                         <div class="col-2">
@@ -113,7 +123,7 @@ loadBtn.addEventListener('click', () => {
     getData()
 })
 
-
+let newPostId = null
 postForm.addEventListener('submit', e => {
     e.preventDefault()
     $.ajax({
@@ -125,7 +135,7 @@ postForm.addEventListener('submit', e => {
             'body': body.value,
         },
         success: function (response) {
-            console.log(response)
+            newPostId = response.id
             postsBox.insertAdjacentHTML('afterbegin', `
                 <div class="card mb-2">
                   <div class="card-body">
@@ -135,7 +145,7 @@ postForm.addEventListener('submit', e => {
                   <div class="card-footer">
                     <div class="row">
                         <div class="col-1">
-                            <a href="#" class="btn btn-primary">Details</a>
+                            <a href="${url}${response.id}" class="btn btn-primary">Details</a>
                         </div>
                         
                         <div class="col-2">
@@ -150,12 +160,39 @@ postForm.addEventListener('submit', e => {
             likeUnlikePosts()
             $('#addPostModal').modal('hide')
             handleAlerts('success', 'New post added!')
+            postForm.reset()
         },
         error: function (error) {
             console.log(error)
             handleAlerts('danger', 'Woops.. something went wrong!')
+
         }
 
     })
 })
+addBtn.addEventListener('click', () => {
+    dropzone.classList.remove('not-visible')
+})
+
+closeBtns.forEach(btn => btn.addEventListener('click', ()=> {
+    postForm.reset()
+    if (!dropzone.classList.contains('not-visible')) {
+        dropzone.classList.add('not-visible')
+    }
+}))
+
+dropzone.autoDiscover = false
+const myDropzone = new Dropzone('#my-dropzone', {
+    url: 'upload/',
+    init: function () {
+        this.on('sending', function (file, xhr, formData){
+            formData.append('csrfmiddlewaretoken', csrftoken)
+            formData.append('new_post_id', newPostId)
+        })
+    },
+    maxFiles: 5,
+    maxFilesize: 4,
+    acceptedFiles: '.png, .jpg, jpeg'
+})
+
 getData()
