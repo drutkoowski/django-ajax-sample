@@ -76,9 +76,9 @@
         <div class="mt-2 mb-2">No photos to show</div>
     {% endif %}
 
-    <button id="back-btn" class="btn btn-info">
+    <a href="{% url 'posts:main-board' %}" id="back-btn" class="btn btn-info">
         Back
-    </button>
+    </a>
 
 
     <button id="update-btn" class="btn btn-primary not-visible" data-bs-toggle="modal" data-bs-target="#updateModal">
